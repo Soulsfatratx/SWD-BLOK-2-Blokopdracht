@@ -1,3 +1,10 @@
+import pygame
+from renderer import width, height
+from pygame.locals import QUIT
+
+# screen size (pixels)
+# define sensible defaults for width and height
+
 # main.py
 # Verantwoordelijke: Jona
 
@@ -8,7 +15,25 @@
 # from renderer import ...
 
 # start pygame op
-# pygame.init(), scherm aanmaken
+def main():
+    pygame.init()
+    # pygame.init(), scherm aanmaken
+    screen = pygame.display.set_mode((width, height))
+    background = pygame.Surface(screen.get_size())
+    background = background.convert()
+    background.fill((250, 250, 250))
+    pygame.display.set_caption("Blockparty")
+    # Event loop
+    while True:
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                return
+
+        screen.blit(background, (0, 0))
+        pygame.display.flip()
+if __name__ == "__main__":
+    main()
+
 
 # houdt bij: huidige positie x, y
 # waar het blok nu is

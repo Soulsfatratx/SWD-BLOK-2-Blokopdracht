@@ -6,30 +6,32 @@
 # shape, x, y van main.py  — positie van het vallende blok
 # score     van score.py   — getal om op scherm te zetten
 # next_shape van main.py   — voor de preview
-
-
-# FUNCTIES
+columns = 10
+rows = 20
+CELL_SIZE = 60 #change this to change the size of the blocks
+width = CELL_SIZE * columns
+height = CELL_SIZE * rows
 
 def draw_board(screen, grid):
-    # tekent alle gevulde vakjes
+    # All locked blocks already on the grid
     pass
 
 
 def draw_block(screen, shape, x, y):
-    # tekent het vallende blok
+    # The piece that is currently falling
     pass
 
 
 def draw_score(screen, score):
-    # tekent de puntentelling
+    # The score number on screen
     pass
 
 
 def draw_preview(screen, shape):
-    # tekent het volgende blok
+    # The next piece (small preview box)
     pass
 
 
 def draw_game_over(screen, score):
-    # toont game over scherm
+    # The Game Over screen
     pass
