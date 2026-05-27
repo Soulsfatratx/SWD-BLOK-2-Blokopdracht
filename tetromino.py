@@ -17,13 +17,13 @@ SHAPES = {
 
 # Colors matching with their shapes
 COLORS = {
-"I": "#37DCDC",  # cyan
-"O": "#FFFF00",  # yellow
-"T": "#800080",  # purple
-"S": "#008000",  # green
-"Z": "#FF0000",  # red
-"J": "#0000FF",  # blue
-"L": "#FFA500",  # orange
+    "I": "#37DCDC",  # cyan
+    "O": "#FFFF00",  # yellow
+    "T": "#800080",  # purple
+    "S": "#008000",  # green
+    "Z": "#FF0000",  # red
+    "J": "#0000FF",  # blue
+    "L": "#FFA500",  # orange
 }
 
 
