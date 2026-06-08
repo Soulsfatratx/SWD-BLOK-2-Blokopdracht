@@ -47,10 +47,10 @@ def get_score():
 def get_level(): 
     return level
 
-
-def reset():
+def reset(): # Resets everything to base value at gameover
     global score, level, lines_cleared, lines_to_next_level
     score = 0
     level = 1
     lines_cleared = 0
-    lines_to_next_level = 10
+    lines_to_next_level = 10 
+    
