@@ -26,4 +26,4 @@ def get_full_rows():
 def remove_rows(rijen):
     # verwijdert rijen, schuift rest omlaag
     pass
-XD
+
