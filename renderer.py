@@ -40,6 +40,8 @@ PANEL_MARGIN      = 20
 PANEL_X           = BOARD_WIDTH + PANEL_MARGIN
 PANEL_WIDTH       = CELL_SIZE * 4 + PANEL_MARGIN
 
+TOTAL_WIDTH       = PANEL_X + PANEL_WIDTH + PANEL_MARGIN
+TOTAL_HEIGHT      = BOARD_HEIGHT + PANEL_MARGIN * 2
 # Preview box
 PREVIEW_X         = PANEL_X
 PREVIEW_Y         = 20
@@ -61,7 +63,6 @@ LEVEL_H           = 60
 # Game over overlay — center of full screen
 GAMEOVER_W        = 420
 GAMEOVER_H        = 220
-
 
 # ============ BOARD ============
 
@@ -140,7 +141,7 @@ def draw_preview(screen, shape, color=None):
     Draw next piece preview panel with purple neon glow.
     """
     if color is None:
-        color = NEON["#8d51ff"]
+        color = NEON["purple"]
 
     draw_neon_panel(
         screen,

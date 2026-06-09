@@ -1,7 +1,7 @@
 import pygame
 from board import is_valid, place_block, get_full_rows, remove_rows
 from score import add_points, get_score, get_level, reset
-from renderer import width, height, draw_block, draw_board, draw_game_over, draw_preview, draw_score
+from renderer import TOTAL_WIDTH, TOTAL_HEIGHT, draw_block, draw_board_area, draw_game_over, draw_preview, draw_score, draw_level, draw_background
 from tetromino import get_random_shape, rotate
 from pygame.locals import QUIT
 
@@ -26,14 +26,12 @@ fall_times = {
 def main():
     pygame.init()
     # pygame.init(), scherm aanmaken
-    screen = pygame.display.set_mode((width, height))
-    background = pygame.Surface(screen.get_size())
-    background = background.convert()
-    background.fill((250, 250, 250))
+    screen = pygame.display.set_mode((TOTAL_WIDTH, TOTAL_HEIGHT))
     pygame.display.set_caption("Blockparty")
     # Variables
-    current_block = get_random_shape()
-    next_block = get_random_shape()
+    current_block, current_color = get_random_shape()
+    next_block, next_color = get_random_shape()
+
     current_fall_speed = fall_times.get(get_level(), 16)
     last_fall_time = pygame.time.get_ticks()
     x = 4
@@ -41,6 +39,7 @@ def main():
     # Event loop
     while True:
         for event in pygame.event.get():
+            # Handle user input for moving and rotating the block
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT:
                     new_x = x - 1
@@ -67,15 +66,15 @@ def main():
                         y += 1
                         
 
-                 
+                 # Auto-fall based on current fall speed
         if pygame.time.get_ticks() - last_fall_time > current_fall_speed:
                 last_fall_time = pygame.time.get_ticks()
                 if is_valid(current_block, x, y + 1):
                     y += 1
                 else:
                         place_block(current_block, x, y)
-                        current_block = next_block
-                        next_block = get_random_shape()
+                        current_block, current_color = next_block, next_color
+                        next_block, next_color = get_random_shape()
                         x = 4
                         y = 0
                         cleared_rows = get_full_rows()
@@ -84,14 +83,20 @@ def main():
                         current_fall_speed = fall_times.get(get_level(), 16)
 
                         if not is_valid(current_block,x ,y):
-                                draw_game_over(screen, get_score())
+                                draw_game_over(screen, get_score(), TOTAL_WIDTH, TOTAL_HEIGHT)
                                 reset()
 
 
-        if event.type == QUIT:
+            if event.type == QUIT:
                 return
 
-        screen.blit(background, (0, 0))
+        #Rendering 
+        draw_background(screen, get_level())
+        draw_board_area(screen)
+        draw_block(screen, current_block, x, y, current_color)
+        draw_preview(screen, next_block, next_color)
+        draw_score(screen, get_score())
+        draw_level(screen, get_level())
         pygame.display.flip()
 if __name__ == "__main__":
     main()

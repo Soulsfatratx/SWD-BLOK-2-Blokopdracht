@@ -51,6 +51,7 @@ def rotate(shape):
 
 
 def get_random_shape():
-    """Get a random shape"""
+    """Get a random shape and its color"""
 
-    return random.choice(list(SHAPES.values()))
+    key = random.choice(list(SHAPES.keys()))
+    return SHAPES[key], COLORS[key]
