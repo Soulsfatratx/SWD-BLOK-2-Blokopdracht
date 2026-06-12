@@ -40,6 +40,10 @@ def main():
     while True:
         for event in pygame.event.get():
             # Handle user input for moving and rotating the block
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                import sys; sys.exit()
+                
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT:
                     new_x = x - 1
@@ -85,12 +89,7 @@ def main():
                         if not is_valid(current_block,x ,y):
                                 draw_game_over(screen, get_score(), TOTAL_WIDTH, TOTAL_HEIGHT)
                                 reset()
-
-
-            if event.type == QUIT:
-                return
-
-        #Rendering 
+        # Rendering
         draw_background(screen, get_level())
         draw_board_area(screen)
         draw_block(screen, current_block, x, y, current_color)
@@ -98,5 +97,9 @@ def main():
         draw_score(screen, get_score())
         draw_level(screen, get_level())
         pygame.display.flip()
+
 if __name__ == "__main__":
-    main()
+    main()                                
+
+
+       
