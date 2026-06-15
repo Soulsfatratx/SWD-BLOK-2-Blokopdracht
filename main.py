@@ -1,4 +1,5 @@
 import pygame
+import board
 from board import is_valid, place_block, get_full_rows, remove_rows
 from score import add_points, get_score, get_level, reset
 from renderer import TOTAL_WIDTH, TOTAL_HEIGHT, draw_block, draw_board_area, draw_game_over, draw_preview, draw_score, draw_level, draw_background
@@ -76,7 +77,7 @@ def main():
                 if is_valid(current_block, x, y + 1):
                     y += 1
                 else:
-                        place_block(current_block, x, y)
+                        place_block(current_block, x, y, current_color)
                         current_block, current_color = next_block, next_color
                         next_block, next_color = get_random_shape()
                         x = 4
@@ -91,7 +92,7 @@ def main():
                                 reset()
         # Rendering
         draw_background(screen, get_level())
-        draw_board_area(screen)
+        draw_board_area(screen, board.grid)
         draw_block(screen, current_block, x, y, current_color)
         draw_preview(screen, next_block, next_color)
         draw_score(screen, get_score())

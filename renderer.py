@@ -91,7 +91,7 @@ def draw_board_area(screen, grid=None):
         for row in range(ROWS):
             for col in range(COLUMNS):
                 cell_color = grid[row][col]
-                if cell_color is not None and cell_color != "":
+                if cell_color:
                     cx = col * CELL_SIZE + BOARD_BORDER + 2
                     cy = row * CELL_SIZE + BOARD_BORDER + 2
                     cw = CELL_SIZE - BOARD_BORDER * 2 - 4

@@ -18,12 +18,12 @@ def is_valid(shape, x, y):
     return True
 
 
-def place_block(shape, x, y):
+def place_block(shape, x, y, color):
     # schrijft blok vast in grid
     for rij_i, rij in enumerate(shape):
         for col_i, cel in enumerate(rij):
             if cel:
-                grid[y + rij_i][x + col_i] = 1
+                grid[y + rij_i][x + col_i] = color
 
 
 def get_full_rows():
