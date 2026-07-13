@@ -45,8 +45,8 @@ def main():
 
     pygame.display.set_caption("Blockparty")
     # Spel variabelen
-    current_block, current_color = get_random_shape()
-    next_block, next_color = get_random_shape()
+    current_block, current_color = None, None
+    next_block, next_color = None, None
     current_fall_speed = fall_times.get(get_level(), 16)
     last_fall_time = pygame.time.get_ticks()
     x = 4

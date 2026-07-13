@@ -27,10 +27,7 @@ COLORS = {
 }
 
 
-def populate_bag(bag: list[tuple[list[list[int]], str]]):
-    if bag:
-        return bag
-
+def populate_bag(bag: list):
     for key, shape in SHAPES.items():
         bag.append((shape, COLORS[key]))
 
@@ -66,7 +63,8 @@ def rotate(shape):
 def get_random_shape():
     """Get a random shape and its color"""
 
-    populate_bag(bag)
+    if not bag:
+        populate_bag(bag)
 
     i = random.randint(0, len(bag) - 1)
 
