@@ -2,7 +2,6 @@
 # Verantwoordelijke: Rids
 #
 # Contains:
-# - Correct oklch → hex converter
 # - Shadcn dark and light color palettes (correctly converted)
 # - Cyberpunk neon glow drawing helpers
 # - Rounded rect helper
@@ -10,39 +9,6 @@
 
 import math
 import pygame
-
-
-# ============ OKLCH CONVERTER ============
-
-def oklch_to_hex(L, C, H):
-    """Correct oklch to hex conversion via oklab → linear RGB → sRGB"""
-    h_rad = math.radians(H)
-    a = C * math.cos(h_rad)
-    b = C * math.sin(h_rad)
-
-    l_ = L + 0.3963377774 * a + 0.2158037573 * b
-    m_ = L - 0.1055613458 * a - 0.0638541728 * b
-    s_ = L - 0.0894841775 * a - 1.2914855480 * b
-
-    l = l_ ** 3
-    m = m_ ** 3
-    s = s_ ** 3
-
-    r =  4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s
-    g = -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s
-    b_ = -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s
-
-    def to_srgb(x):
-        if x <= 0.0031308:
-            return 12.92 * x
-        return 1.055 * (x ** (1 / 2.4)) - 0.055
-
-    r  = max(0, min(1, to_srgb(r)))
-    g  = max(0, min(1, to_srgb(g)))
-    b_ = max(0, min(1, to_srgb(b_)))
-
-    return f"#{int(r*255):02x}{int(g*255):02x}{int(b_*255):02x}"
-
 
 # ============ SHADCN DARK MODE PALETTE ============
 # All values correctly converted from Shadcn1.css oklch values
@@ -61,8 +27,8 @@ SHADCN_DARK = {
     "accent":                   "#292423",
     "accent-foreground":        "#fafaf9",
     "destructive":              "#ff6366",
-    "border":                   "#2a2826",   # white 10% on dark bg approximation
-    "input":                    "#302d2b",   # white 15% on dark bg approximation
+    "border":                   "#2a2826",
+    "input":                    "#302d2b",
     "ring":                     "#78706b",
     "sidebar":                  "#1b1817",
     "sidebar-foreground":       "#fafaf9",
@@ -78,35 +44,35 @@ SHADCN_DARK = {
 # ============ SHADCN LIGHT MODE PALETTE ============
 
 SHADCN_LIGHT = {
-    "background":               "#fefefe",
-    "foreground":               "#0b0a09",
-    "card":                     "#fefefe",
-    "card-foreground":          "#0b0a09",
-    "primary":                  "#7008e7",
-    "primary-foreground":       "#f4f2fe",
-    "secondary":                "#f3f3f4",
-    "secondary-foreground":     "#17171a",
-    "muted":                    "#f5f5f4",
-    "muted-foreground":         "#78706b",
-    "accent":                   "#f5f5f4",
-    "accent-foreground":        "#1b1817",
-    "destructive":              "#e7000a",
-    "border":                   "#e7e4e3",
-    "input":                    "#e7e4e3",
-    "ring":                     "#a69f9b",
-    "sidebar":                  "#fafaf9",
-    "sidebar-foreground":       "#0b0a09",
-    "sidebar-primary":          "#7f22fd",
-    "sidebar-primary-foreground": "#f4f2fe",
-    "sidebar-accent":           "#f5f5f4",
-    "sidebar-accent-foreground": "#1b1817",
-    "sidebar-border":           "#e7e4e3",
-    "sidebar-ring":             "#a69f9b",
+    "background":                   "#fefefe",
+    "foreground":                   "#0b0a09",
+    "card":                         "#fefefe",
+    "card-foreground":              "#0b0a09",
+    "primary":                      "#7008e7",
+    "primary-foreground":           "#f4f2fe",
+    "secondary":                    "#f3f3f4",
+    "secondary-foreground":         "#17171a",
+    "muted":                        "#f5f5f4",
+    "muted-foreground":             "#78706b",
+    "accent":                       "#f5f5f4",
+    "accent-foreground":            "#1b1817",
+    "destructive":                  "#e7000a",
+    "border":                       "#e7e4e3",
+    "input":                        "#e7e4e3",
+    "ring":                         "#a69f9b",
+    "sidebar":                      "#fafaf9",
+    "sidebar-foreground":           "#0b0a09",
+    "sidebar-primary":              "#7f22fd",
+    "sidebar-primary-foreground":   "#f4f2fe",
+    "sidebar-accent":               "#f5f5f4",
+    "sidebar-accent-foreground":    "#1b1817",
+    "sidebar-border":               "#e7e4e3",
+    "sidebar-ring":                 "#a69f9b",
 }
 
 
 # ============ CYBERPUNK NEON COLORS ============
-# Extra neon colors for glow effects on top of Shadcn palette
+# Extra neon colors for glow effects on top of Shadows palette
 
 NEON = {
     "purple":   "#8d51ff",   # Shadcn sidebar-primary — main glow color
@@ -127,8 +93,8 @@ LEVEL_COLORS = {
     4: "#0ac68e",
     5: "#ea00d9",
     6: "#711c91",
-    7: "#ff2d78",
-    8: "#ff0000",
+    7: "#ff0000",
+    8: "#ffa200",
     9: "#ffe100",
 }
 
@@ -172,7 +138,7 @@ def draw_rounded_rect(screen, color, rect, radius=10):
 
 # ============ HELPER: ROUNDED RECT BORDER ONLY ============
 
-def draw_rounded_rect_border(screen, color, rect, radius=10, width=2):
+def drawrounded_rect_border(screen, color, rect, radius=10, width=2):
     """Draw only the border of a rounded rectangle"""
     x, y, w, h = rect
     color = hex_to_rgb(color) if isinstance(color, str) else color
@@ -233,16 +199,7 @@ def draw_neon_glow(screen, color, rect, radius=10, glow_size=12, glow_layers=4):
 
 def draw_neon_panel(screen, rect, fill_color, glow_color, border_color=None,
                     radius=10, glow_size=12, border_width=2):
-    """
-    Draw a complete cyberpunk panel:
-    1. Glow bloom underneath
-    2. Filled rounded rect
-    3. Neon border on top
 
-    fill_color   — hex string for panel background
-    glow_color   — hex string for outer glow color
-    border_color — hex string for border line (defaults to glow_color)
-    """
     if border_color is None:
         border_color = glow_color
 

@@ -15,9 +15,7 @@ from Theme_style import (
     SHADCN_DARK,
     NEON,
     LEVEL_COLORS,
-    TETROMINO_COLORS,
     hex_to_rgb,
-    draw_rounded_rect,
     draw_rounded_rect_border,
     draw_neon_glow,
     draw_neon_panel,
@@ -30,7 +28,7 @@ CELL_SIZE    = 60
 COLUMNS      = 10
 ROWS         = 20
 BOARD_BORDER = 1
-RADIUS       = 10   # matches Shadcn --radius: 0.625rem ≈ 10px
+RADIUS       = 0
 
 BOARD_WIDTH  = CELL_SIZE * COLUMNS
 BOARD_HEIGHT = CELL_SIZE * ROWS
@@ -75,16 +73,15 @@ def draw_background(screen, level):
 def draw_board_area(screen, grid=None):
     """
     Draw the game board.
-    - Neon cyan border glow around board edge
     - Draws all locked blocks from grid if provided
     """
     board_rect = (0, 0, BOARD_WIDTH, BOARD_HEIGHT)
 
     # Neon cyan glow on board border
-    draw_neon_glow(screen, NEON["cyan"], board_rect, radius=0, glow_size=5, glow_layers=3)
+    draw_neon_glow(screen, NEON["purple"], board_rect, radius=0, glow_size=5, glow_layers=3)
 
     # Sharp board border line
-    draw_rounded_rect_border(screen, NEON["cyan"], board_rect, radius=0, width=BOARD_BORDER)
+    draw_rounded_rect_border(screen, NEON["purple"], board_rect, radius=0, width=BOARD_BORDER)
 
     # Draw locked blocks from grid
     if grid is not None:
@@ -96,7 +93,6 @@ def draw_board_area(screen, grid=None):
                     cy = row * CELL_SIZE + BOARD_BORDER + 2
                     cw = CELL_SIZE - BOARD_BORDER * 2 - 4
                     ch = CELL_SIZE - BOARD_BORDER * 2 - 4
-                    color_rgb = hex_to_rgb(cell_color) if isinstance(cell_color, str) else cell_color
                     draw_neon_panel(
                         screen,
                         (cx, cy, cw, ch),
@@ -128,8 +124,8 @@ def draw_block(screen, shape, x, y, color=None):
                     (cx, cy, cw, ch),
                     fill_color=color,
                     glow_color=color,
-                    radius=4,
-                    glow_size=6,
+                    radius=2,
+                    glow_size=2,
                     border_width=1
                 )
 
@@ -174,8 +170,8 @@ def draw_preview(screen, shape, color=None):
                     (cx, cy, cw, ch),
                     fill_color=color,
                     glow_color=color,
-                    radius=4,
-                    glow_size=5,
+                    radius=2,
+                    glow_size=2,
                     border_width=1
                 )
 
