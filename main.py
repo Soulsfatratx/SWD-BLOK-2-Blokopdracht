@@ -71,6 +71,8 @@ def main():
 
     # Event loop
     while True:
+        space_pressed = False
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -148,6 +150,8 @@ def main():
                             y = new_y
 
                     elif event.key == pygame.K_SPACE:
+                        space_pressed = True
+
                         while is_valid(current_block, x, y + 1):
                             y += 1
 
@@ -207,7 +211,7 @@ def main():
                             game_state = "playing"
 
         # Blok valt automatisch (alleen tijdens het spelen)
-        if game_state == "playing" and pygame.time.get_ticks() - last_fall_time > current_fall_speed:
+        if game_state == "playing" and (pygame.time.get_ticks() - last_fall_time > current_fall_speed or space_pressed):
             last_fall_time = pygame.time.get_ticks()
             if is_valid(current_block, x, y + 1):
                 y += 1
