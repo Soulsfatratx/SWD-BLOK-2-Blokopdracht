@@ -41,9 +41,9 @@ def nieuw_spel():
 def main():
     pygame.init()
     # pygame.init(), scherm aanmaken
-    screen = pygame.display.set_mode((TOTAL_WIDTH, TOTAL_HEIGHT))
-    pygame.display.set_caption("Blockparty")
+    screen = pygame.display.set_mode((TOTAL_WIDTH, TOTAL_HEIGHT), pygame.SCALED | pygame.FULLSCREEN)
 
+    pygame.display.set_caption("Blockparty")
     # Spel variabelen
     current_block, current_color = get_random_shape()
     next_block, next_color = get_random_shape()
