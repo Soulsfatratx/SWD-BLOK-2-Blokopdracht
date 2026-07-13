@@ -27,6 +27,19 @@ COLORS = {
 }
 
 
+def populate_bag(bag: list[tuple[list[list[int]], str]]):
+    if bag:
+        return bag
+
+    for key, shape in SHAPES.items():
+        bag.append((shape, COLORS[key]))
+
+    return bag
+
+
+bag = populate_bag([])
+
+
 def get_shape(name):
     """Get a 2D array representing a shape"""
 
@@ -41,17 +54,20 @@ def rotate(shape):
 
     match (height, width):
         case (1, 4) | (4, 1):
-            return [[shape[y][x] for y in range(len(shape))] for x in range(len(shape[0]))]
+            return [[shape[y][x] for y in range(height)] for x in range(width)]
         case (2, 2):
-            return [[shape[x][y] for y in range(len(shape))] for x in range(len(shape[0]))]
+            return [[shape[x][y] for y in range(height)] for x in range(width)]
         case (2, 3):
-            return [[shape[1 - y][x] for y in range(len(shape))] for x in range(len(shape[0]))]
+            return [[shape[1 - y][x] for y in range(height)] for x in range(width)]
         case (3, 2):
-            return [[shape[2 - y][x] for y in range(len(shape))] for x in range(len(shape[0]))]
+            return [[shape[2 - y][x] for y in range(height)] for x in range(width)]
 
 
 def get_random_shape():
     """Get a random shape and its color"""
 
-    key = random.choice(list(SHAPES.keys()))
-    return SHAPES[key], COLORS[key]
+    populate_bag(bag)
+
+    i = random.randint(0, len(bag) - 1)
+
+    return bag.pop(i)

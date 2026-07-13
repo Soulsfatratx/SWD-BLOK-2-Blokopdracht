@@ -1,5 +1,5 @@
 ================================================================
-BLOCKPARTY — Tetris project
+BLOCKPARTY | Tetris project
 Groep: Jona, Manuel, Bogac, Rids
 ================================================================
 
@@ -12,7 +12,7 @@ VEREISTEN
 EERSTE OPSTART
 --------------
 
-Stap 1 — Controleer of Python geinstalleerd is
+Stap 1 Controleer of Python geinstalleerd is
   Open een terminal (Windows: Command Prompt of PowerShell, Mac: Terminal)
   en typ:
 
@@ -21,7 +21,7 @@ Stap 1 — Controleer of Python geinstalleerd is
   Je moet iets zien zoals "Python 3.12.x".
   Zie je dat niet, download Python dan via https://www.python.org/downloads/
 
-Stap 2 — Installeer de benodigde packages
+Stap 2 Installeer de benodigde packages
   Navigeer in de terminal naar de map waar de projectbestanden staan:
 
     Windows:  cd C:\pad\naar\je\map
@@ -37,7 +37,7 @@ Stap 2 — Installeer de benodigde packages
 
     pip install pygame
 
-Stap 3 — Start het spel
+Stap 3 Start het spel
   Zorg dat je in de juiste map staat en typ:
 
     python main.py
