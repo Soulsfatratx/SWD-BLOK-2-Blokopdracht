@@ -1,342 +1,243 @@
 # renderer.py
 # Verantwoordelijke: Rids
 #
-# ONTVANGT VAN ANDERE BESTANDEN:
-# grid        van board.py   — 2D array of color strings
-# shape, x, y van main.py   — positie van het vallende blok
-# score       van score.py  — getal om op scherm te zetten
-# next_shape  van main.py   — voor de preview
-#
-# Imports all colors and style helpers from Theme_style.py
-# Does NOT run any game loop — only rendering functions
+# Draws everything on the screen. main.py calls these functions.
+# This file only draws — it never changes the game itself.
 
 import pygame
-from Theme_style import (
-    SHADCN_DARK,
-    NEON,
-    LEVEL_COLORS,
-    TETROMINO_COLORS,
-    hex_to_rgb,
-    draw_rounded_rect,
-    draw_rounded_rect_border,
-    draw_neon_glow,
-    draw_neon_panel,
-)
+from Theme_style import UI_COLORS, NEON, LEVEL_COLORS, hex_to_rgb, draw_panel
 
 
-# ============ LAYOUT CONFIG ============
+# ============ LAYOUT ============
+# All positions and sizes in one place.
 
-CELL_SIZE    = 60
-COLUMNS      = 10
-ROWS         = 20
-BOARD_BORDER = 1
-RADIUS       = 10   # matches Shadcn --radius: 0.625rem ≈ 10px
+CELL_SIZE = 60
+COLUMNS   = 10
+ROWS      = 20
 
 BOARD_WIDTH  = CELL_SIZE * COLUMNS
 BOARD_HEIGHT = CELL_SIZE * ROWS
 
-# Panel positions — right side of board
-PANEL_MARGIN      = 20
-PANEL_X           = BOARD_WIDTH + PANEL_MARGIN
-PANEL_WIDTH       = CELL_SIZE * 4 + PANEL_MARGIN
+BLOCK_GAP = 3   # empty pixels around every block, so blocks don't touch
 
-TOTAL_WIDTH       = PANEL_X + PANEL_WIDTH + PANEL_MARGIN
-TOTAL_HEIGHT      = BOARD_HEIGHT + PANEL_MARGIN * 2
-# Preview box
-PREVIEW_X         = PANEL_X
-PREVIEW_Y         = 20
-PREVIEW_W         = PANEL_WIDTH
-PREVIEW_H         = CELL_SIZE * 4 + 40
+# All side panels sit in one column right of the board: same x, same width
+PANEL_MARGIN = 20
+PANEL_X      = BOARD_WIDTH + PANEL_MARGIN
+PANEL_WIDTH  = CELL_SIZE * 4 + PANEL_MARGIN
 
-# Scoreboard
-SCORE_X           = PANEL_X
-SCORE_Y           = PREVIEW_Y + PREVIEW_H + PANEL_MARGIN
-SCORE_W           = PANEL_WIDTH
-SCORE_H           = 70
+TOTAL_WIDTH  = PANEL_X + PANEL_WIDTH + PANEL_MARGIN
+TOTAL_HEIGHT = BOARD_HEIGHT + PANEL_MARGIN * 2
 
-# Level indicator
-LEVEL_X           = PANEL_X
-LEVEL_Y           = SCORE_Y + SCORE_H + PANEL_MARGIN
-LEVEL_W           = PANEL_WIDTH
-LEVEL_H           = 60
+# The panels stack top to bottom: each one starts under the one above it
+PREVIEW_Y      = 20
+PREVIEW_HEIGHT = CELL_SIZE * 4 + 40
+SCORE_Y        = PREVIEW_Y + PREVIEW_HEIGHT + PANEL_MARGIN
+SCORE_HEIGHT   = 70
+LEVEL_Y        = SCORE_Y + SCORE_HEIGHT + PANEL_MARGIN
+LEVEL_HEIGHT   = 60
+LEADER_Y       = LEVEL_Y + LEVEL_HEIGHT + PANEL_MARGIN
+LEADER_HEIGHT  = TOTAL_HEIGHT - LEADER_Y - PANEL_MARGIN
 
-# Game over overlay — center of full screen
-GAMEOVER_W        = 420
-GAMEOVER_H        = 220
+# Grid lines between the cells: 0 = invisible, 255 = completely black
+GRID_LINE_DARKNESS = 90
+
+
+# ============ FONTS ============
+fonts = {}
+
+def get_font(size):
+    if size not in fonts:
+        fonts[size] = pygame.font.Font(None, size)
+    return fonts[size]
+
+
+# ============ SHARED HELPERS ============
+
+def draw_text(screen, text, size, color, x, y):
+    """Draw text with its top-left corner at (x, y)."""
+    text_image = get_font(size).render(str(text), True, hex_to_rgb(color))
+    screen.blit(text_image, (x, y))
+
+
+def draw_text_centered(screen, text, size, color, center_x, y):
+    """Draw text so that the middle of the text is at center_x."""
+    text_image = get_font(size).render(str(text), True, hex_to_rgb(color))
+    screen.blit(text_image, (center_x - text_image.get_width() // 2, y))
+
+
+def draw_popup(screen, screen_width, screen_height, panel_width, panel_height, border_color):
+    """
+    The start of every popup: a dark see-through layer over the whole
+    screen, with a panel in the middle. Gives back the y of the panel's
+    top edge, so the caller can place text down from there.
+    """
+    overlay = pygame.Surface((screen_width, screen_height), pygame.SRCALPHA)
+    overlay.fill((0, 0, 0, 180))
+    screen.blit(overlay, (0, 0))
+
+    panel_x = screen_width  // 2 - panel_width  // 2
+    panel_y = screen_height // 2 - panel_height // 2
+    draw_panel(screen, (panel_x, panel_y, panel_width, panel_height),
+                fill_color=UI_COLORS["card"], border_color=border_color)
+    return panel_y
+
 
 # ============ BOARD ============
 
 def draw_background(screen, level):
-    """Fill screen background based on current level"""
+    """Fill the whole screen with the background color of the current level."""
     color = LEVEL_COLORS.get(level, LEVEL_COLORS[1])
     screen.fill(hex_to_rgb(color))
 
 
+def draw_grid_lines(screen):
+    """
+    Thin dark lines between the cells, so you can see the grid.
+    The lines follow CELL_SIZE, so they always match the block size.
+    """
+    lines_layer = pygame.Surface((BOARD_WIDTH, BOARD_HEIGHT), pygame.SRCALPHA)
+    line_color = (0, 0, 0, GRID_LINE_DARKNESS)
+
+    # Standing lines: one between every column
+    for column in range(1, COLUMNS):
+        line_x = column * CELL_SIZE
+        pygame.draw.line(lines_layer, line_color, (line_x, 0), (line_x, BOARD_HEIGHT))
+
+    # Lying lines: one between every row
+    for row in range(1, ROWS):
+        line_y = row * CELL_SIZE
+        pygame.draw.line(lines_layer, line_color, (0, line_y), (BOARD_WIDTH, line_y))
+
+    screen.blit(lines_layer, (0, 0))
+
+
+def draw_cell(screen, column, row, color):
+    """Draw one square block at board position (column, row)."""
+    pixel_x = column * CELL_SIZE + BLOCK_GAP
+    pixel_y = row * CELL_SIZE + BLOCK_GAP
+    size = CELL_SIZE - BLOCK_GAP * 2
+    draw_panel(screen, (pixel_x, pixel_y, size, size), fill_color=color)
+
+
 def draw_board_area(screen, grid=None):
     """
-    Draw the game board.
-    - Neon cyan border glow around board edge
-    - Draws all locked blocks from grid if provided
+    Draw the game board: grid lines, a sharp cyan border around the edge,
+    and all locked blocks that are saved in the grid.
     """
-    board_rect = (0, 0, BOARD_WIDTH, BOARD_HEIGHT)
+    draw_grid_lines(screen)
+    draw_panel(screen, (0, 0, BOARD_WIDTH, BOARD_HEIGHT),
+                border_color=NEON["cyan"], border_width=1)
 
-    # Neon cyan glow on board border
-    draw_neon_glow(screen, NEON["cyan"], board_rect, radius=0, glow_size=5, glow_layers=3)
-
-    # Sharp board border line
-    draw_rounded_rect_border(screen, NEON["cyan"], board_rect, radius=0, width=BOARD_BORDER)
-
-    # Draw locked blocks from grid
     if grid is not None:
         for row in range(ROWS):
-            for col in range(COLUMNS):
-                cell_color = grid[row][col]
-                if cell_color:
-                    cx = col * CELL_SIZE + BOARD_BORDER + 2
-                    cy = row * CELL_SIZE + BOARD_BORDER + 2
-                    cw = CELL_SIZE - BOARD_BORDER * 2 - 4
-                    ch = CELL_SIZE - BOARD_BORDER * 2 - 4
-                    color_rgb = hex_to_rgb(cell_color) if isinstance(cell_color, str) else cell_color
-                    draw_neon_panel(
-                        screen,
-                        (cx, cy, cw, ch),
-                        fill_color=cell_color,
-                        glow_color=cell_color,
-                        radius=4,
-                        glow_size=4,
-                        border_width=1
-                    )
+            for column in range(COLUMNS):
+                if grid[row][column] != 0:
+                    draw_cell(screen, column, row, grid[row][column])
 
 
 def draw_block(screen, shape, x, y, color=None):
-    """
-    Draw the currently falling block.
-    Each cell gets a neon panel with glow matching block color.
-    """
+    """Draw the currently falling block, one cell at a time."""
     if color is None:
         color = NEON["purple"]
 
     for row in range(len(shape)):
-        for col in range(len(shape[0])):
-            if shape[row][col] == 1:
-                cx = (x + col) * CELL_SIZE + BOARD_BORDER + 2
-                cy = (y + row) * CELL_SIZE + BOARD_BORDER + 2
-                cw = CELL_SIZE - BOARD_BORDER * 2 - 4
-                ch = CELL_SIZE - BOARD_BORDER * 2 - 4
-                draw_neon_panel(
-                    screen,
-                    (cx, cy, cw, ch),
-                    fill_color=color,
-                    glow_color=color,
-                    radius=4,
-                    glow_size=6,
-                    border_width=1
-                )
+        for column in range(len(shape[0])):
+            if shape[row][column] == 1:
+                draw_cell(screen, x + column, y + row, color)
 
 
 # ============ SIDE PANELS ============
 
 def draw_preview(screen, shape, color=None):
-    """
-    Draw next piece preview panel with purple neon glow.
-    """
+    """Panel that shows the next block."""
     if color is None:
         color = NEON["purple"]
 
-    draw_neon_panel(
-        screen,
-        (PREVIEW_X, PREVIEW_Y, PREVIEW_W, PREVIEW_H),
-        fill_color=SHADCN_DARK["card"],
-        glow_color=NEON["purple"],
-        radius=RADIUS,
-        glow_size=5
-    )
+    draw_panel(screen, (PANEL_X, PREVIEW_Y, PANEL_WIDTH, PREVIEW_HEIGHT),
+                fill_color=UI_COLORS["card"], border_color=NEON["purple"])
+    draw_text(screen, "NEXT", 24, NEON["purple"], PANEL_X + 12, PREVIEW_Y + 10)
 
-    font = pygame.font.Font(None, 24)
-    label = font.render("NEXT", True, hex_to_rgb(NEON["purple"]))
-    screen.blit(label, (PREVIEW_X + 12, PREVIEW_Y + 10))
+    # The preview blocks are a bit smaller than the board blocks
+    preview_cell = CELL_SIZE - 10
 
-    # Center shape in preview box
-    shape_cols = len(shape[0])
+    # Put the shape in the middle of the panel
+    shape_columns = len(shape[0])
     shape_rows = len(shape)
-    offset_x = PREVIEW_X + (PREVIEW_W - shape_cols * (CELL_SIZE - 10)) // 2
-    offset_y = PREVIEW_Y + 30 + (PREVIEW_H - 30 - shape_rows * (CELL_SIZE - 10)) // 2
+    start_x = PANEL_X + (PANEL_WIDTH - shape_columns * preview_cell) // 2
+    start_y = PREVIEW_Y + 30 + (PREVIEW_HEIGHT - 30 - shape_rows * preview_cell) // 2
 
     for row in range(shape_rows):
-        for col in range(shape_cols):
-            if shape[row][col] == 1:
-                cx = offset_x + col * (CELL_SIZE - 10)
-                cy = offset_y + row * (CELL_SIZE - 10)
-                cw = CELL_SIZE - 14
-                ch = CELL_SIZE - 14
-                draw_neon_panel(
-                    screen,
-                    (cx, cy, cw, ch),
-                    fill_color=color,
-                    glow_color=color,
-                    radius=4,
-                    glow_size=5,
-                    border_width=1
-                )
+        for column in range(shape_columns):
+            if shape[row][column] == 1:
+                block_x = start_x + column * preview_cell
+                block_y = start_y + row * preview_cell
+                block_size = preview_cell - BLOCK_GAP * 2
+                draw_panel(screen, (block_x, block_y, block_size, block_size),
+                            fill_color=color)
+
+
+def draw_info_panel(screen, y, height, title, value, color, value_size):
+    """
+    Small panel with a title on top and a value under it.
+    Used for the SCORE and LEVEL panels, because they look the same.
+    """
+    draw_panel(screen, (PANEL_X, y, PANEL_WIDTH, height),
+                fill_color=UI_COLORS["card"], border_color=color)
+    draw_text(screen, title, 22, color, PANEL_X + 12, y + 10)
+    draw_text(screen, value, value_size, UI_COLORS["foreground"], PANEL_X + 12, y + 30)
 
 
 def draw_score(screen, score):
-    """
-    Draw score panel with green neon glow.
-    """
-    draw_neon_panel(
-        screen,
-        (SCORE_X, SCORE_Y, SCORE_W, SCORE_H),
-        fill_color=SHADCN_DARK["card"],
-        glow_color=NEON["green"],
-        radius=RADIUS,
-        glow_size=5
-    )
-
-    font_label = pygame.font.Font(None, 22)
-    font_score = pygame.font.Font(None, 38)
-
-    label = font_label.render("SCORE", True, hex_to_rgb(NEON["green"]))
-    score_text = font_score.render(str(score), True, hex_to_rgb(SHADCN_DARK["foreground"]))
-
-    screen.blit(label, (SCORE_X + 12, SCORE_Y + 10))
-    screen.blit(score_text, (SCORE_X + 12, SCORE_Y + 30))
+    """Score panel, green."""
+    draw_info_panel(screen, SCORE_Y, SCORE_HEIGHT, "SCORE", score, NEON["green"], 38)
 
 
 def draw_level(screen, level):
-    """
-    Draw level indicator panel with cyan neon glow.
-    """
-    draw_neon_panel(
-        screen,
-        (LEVEL_X, LEVEL_Y, LEVEL_W, LEVEL_H),
-        fill_color=SHADCN_DARK["card"],
-        glow_color=NEON["cyan"],
-        radius=RADIUS,
-        glow_size=5
-    )
-
-    font_label = pygame.font.Font(None, 22)
-    font_level = pygame.font.Font(None, 34)
-
-    label = font_label.render("LEVEL", True, hex_to_rgb(NEON["cyan"]))
-    level_text = font_level.render(str(level), True, hex_to_rgb(SHADCN_DARK["foreground"]))
-
-    screen.blit(label, (LEVEL_X + 12, LEVEL_Y + 8))
-    screen.blit(level_text, (LEVEL_X + 12, LEVEL_Y + 28))
-
-
-# ============ GAME OVER OVERLAY ============
-
-def draw_game_over(screen, score, screen_width, screen_height):
-    """
-    Draw game over overlay in center of screen with pink neon glow.
-    """
-    gx = screen_width  // 2 - GAMEOVER_W // 2
-    gy = screen_height // 2 - GAMEOVER_H // 2
-
-    # Dark overlay behind panel
-    overlay = pygame.Surface((screen_width, screen_height), pygame.SRCALPHA)
-    overlay.fill((0, 0, 0, 160))
-    screen.blit(overlay, (0, 0))
-
-    draw_neon_panel(
-        screen,
-        (gx, gy, GAMEOVER_W, GAMEOVER_H),
-        fill_color=SHADCN_DARK["card"],
-        glow_color=NEON["pink"],
-        radius=RADIUS,
-        glow_size=16
-    )
-
-    font_title  = pygame.font.Font(None, 56)
-    font_score  = pygame.font.Font(None, 36)
-    font_prompt = pygame.font.Font(None, 24)
-
-    title  = font_title.render("GAME OVER",      True, hex_to_rgb(NEON["pink"]))
-    s_text = font_score.render(f"Score: {score}", True, hex_to_rgb(SHADCN_DARK["foreground"]))
-    prompt = font_prompt.render("Press R to restart", True, hex_to_rgb(SHADCN_DARK["muted-foreground"]))
-
-    screen.blit(title,  (gx + GAMEOVER_W // 2 - title.get_width()  // 2, gy + 40))
-    screen.blit(s_text, (gx + GAMEOVER_W // 2 - s_text.get_width() // 2, gy + 110))
-    screen.blit(prompt, (gx + GAMEOVER_W // 2 - prompt.get_width() // 2, gy + 160))
-
-
-# ============ LEADERBOARD ============
-# The leaderboard sits under the level panel, in the empty space
-
-LEADER_X = LEVEL_X
-LEADER_Y = LEVEL_Y + LEVEL_H + PANEL_MARGIN
-LEADER_W = LEVEL_W
-LEADER_H = TOTAL_HEIGHT - LEADER_Y - PANEL_MARGIN
+    """Level panel, cyan."""
+    draw_info_panel(screen, LEVEL_Y, LEVEL_HEIGHT, "LEVEL", level, NEON["cyan"], 34)
 
 
 def draw_leaderboard(screen, scores):
     """
-    Draw the leaderboard panel with yellow neon glow.
+    Leaderboard panel, yellow.
     scores = list of [name, points, level]
     """
-    draw_neon_panel(
-        screen,
-        (LEADER_X, LEADER_Y, LEADER_W, LEADER_H),
-        fill_color=SHADCN_DARK["card"],
-        glow_color=NEON["yellow"],
-        radius=RADIUS,
-        glow_size=5
-    )
-
-    font_title = pygame.font.Font(None, 26)
-    font_row   = pygame.font.Font(None, 26)
-
-    title = font_title.render("LEADERBOARD", True, hex_to_rgb(NEON["yellow"]))
-    screen.blit(title, (LEADER_X + 14, LEADER_Y + 14))
+    draw_panel(screen, (PANEL_X, LEADER_Y, PANEL_WIDTH, LEADER_HEIGHT),
+                fill_color=UI_COLORS["card"], border_color=NEON["yellow"])
+    draw_text(screen, "LEADERBOARD", 26, NEON["yellow"], PANEL_X + 14, LEADER_Y + 14)
 
     # One score per line: "1. NAME  1200  L4"
-    start_y    = LEADER_Y + 50
-    row_height = 34
     place = 1
     for score in scores:
-        name   = score[0]
-        points = score[1]
-        level  = score[2]
-        text = str(place) + ". " + name + "   " + str(points) + "   L" + str(level)
-        row = font_row.render(text, True, hex_to_rgb(SHADCN_DARK["foreground"]))
-        screen.blit(row, (LEADER_X + 14, start_y + (place - 1) * row_height))
+        text = str(place) + ". " + score[0] + "   " + str(score[1]) + "   L" + str(score[2])
+        draw_text(screen, text, 26, UI_COLORS["foreground"],
+                  PANEL_X + 14, LEADER_Y + 50 + (place - 1) * 34)
         place = place + 1
 
 
-# ============ MENU ============
+# ============ POPUPS (game over, menus, name entry) ============
+
+def draw_game_over(screen, score, screen_width, screen_height):
+    """Game over popup, pink."""
+    panel_y = draw_popup(screen, screen_width, screen_height, 420, 220, NEON["pink"])
+    center_x = screen_width // 2
+
+    draw_text_centered(screen, "GAME OVER", 56, NEON["pink"], center_x, panel_y + 40)
+    draw_text_centered(screen, "Score: " + str(score), 36, UI_COLORS["foreground"], center_x, panel_y + 110)
+    draw_text_centered(screen, "Press R to restart", 24, UI_COLORS["muted-foreground"], center_x, panel_y + 160)
+
 
 def draw_menu(screen, title, options, selected, width, height):
     """
-    Draw a menu in the center of the screen.
+    Menu popup, purple.
     options  = list of texts
     selected = index of the chosen option (gets highlighted)
     """
-    # Dark layer over the whole screen
-    overlay = pygame.Surface((width, height), pygame.SRCALPHA)
-    overlay.fill((0, 0, 0, 180))
-    screen.blit(overlay, (0, 0))
+    panel_height = 130 + len(options) * 60
+    panel_y = draw_popup(screen, width, height, 460, panel_height, NEON["purple"])
+    center_x = width // 2
 
-    panel_w = 460
-    panel_h = 130 + len(options) * 60
-    px = width  // 2 - panel_w // 2
-    py = height // 2 - panel_h // 2
-
-    draw_neon_panel(
-        screen,
-        (px, py, panel_w, panel_h),
-        fill_color=SHADCN_DARK["card"],
-        glow_color=NEON["purple"],
-        radius=RADIUS,
-        glow_size=16
-    )
-
-    font_title  = pygame.font.Font(None, 52)
-    font_option = pygame.font.Font(None, 38)
-
-    title_text = font_title.render(title, True, hex_to_rgb(NEON["purple"]))
-    screen.blit(title_text, (px + panel_w // 2 - title_text.get_width() // 2, py + 30))
+    draw_text_centered(screen, title, 52, NEON["purple"], center_x, panel_y + 30)
 
     # Draw each option. The selected one gets a different color and arrows.
     for i in range(len(options)):
@@ -344,47 +245,17 @@ def draw_menu(screen, title, options, selected, width, height):
             color = NEON["green"]
             text = "> " + options[i] + " <"
         else:
-            color = SHADCN_DARK["muted-foreground"]
+            color = UI_COLORS["muted-foreground"]
             text = options[i]
-        option_text = font_option.render(text, True, hex_to_rgb(color))
-        oy = py + 110 + i * 60
-        screen.blit(option_text, (px + panel_w // 2 - option_text.get_width() // 2, oy))
+        draw_text_centered(screen, text, 38, color, center_x, panel_y + 110 + i * 60)
 
 
-# ============ NAME ENTRY (multiplayer) ============
+def draw_name_entry(screen, player_number, name, width, height):
+    """Popup where a player types their name (multiplayer), cyan."""
+    panel_y = draw_popup(screen, width, height, 460, 200, NEON["cyan"])
+    center_x = width // 2
 
-def draw_name_entry(screen, player_nr, name, width, height):
-    """
-    Draw the screen where a player types their name (multiplayer).
-    """
-    overlay = pygame.Surface((width, height), pygame.SRCALPHA)
-    overlay.fill((0, 0, 0, 180))
-    screen.blit(overlay, (0, 0))
-
-    panel_w = 460
-    panel_h = 200
-    px = width  // 2 - panel_w // 2
-    py = height // 2 - panel_h // 2
-
-    draw_neon_panel(
-        screen,
-        (px, py, panel_w, panel_h),
-        fill_color=SHADCN_DARK["card"],
-        glow_color=NEON["cyan"],
-        radius=RADIUS,
-        glow_size=16
-    )
-
-    font_title = pygame.font.Font(None, 40)
-    font_name  = pygame.font.Font(None, 46)
-    font_hint  = pygame.font.Font(None, 24)
-
-    title = font_title.render("Player " + str(player_nr) + " - enter name", True, hex_to_rgb(NEON["cyan"]))
-    screen.blit(title, (px + panel_w // 2 - title.get_width() // 2, py + 30))
-
-    # Show the typed name with an underscore after it (like a cursor)
-    name_text = font_name.render(name + "_", True, hex_to_rgb(SHADCN_DARK["foreground"]))
-    screen.blit(name_text, (px + panel_w // 2 - name_text.get_width() // 2, py + 90))
-
-    hint = font_hint.render("Press Enter to confirm", True, hex_to_rgb(SHADCN_DARK["muted-foreground"]))
-    screen.blit(hint, (px + panel_w // 2 - hint.get_width() // 2, py + 150))
+    draw_text_centered(screen, "Player " + str(player_number) + " - enter name", 40, NEON["cyan"], center_x, panel_y + 30)
+    # The typed name with an underscore behind it, so it looks like a cursor
+    draw_text_centered(screen, name + "_", 46, UI_COLORS["foreground"], center_x, panel_y + 90)
+    draw_text_centered(screen, "Press Enter to confirm", 24, UI_COLORS["muted-foreground"], center_x, panel_y + 150)
