@@ -5,7 +5,7 @@
 # This file only draws — it never changes the game itself.
 
 import pygame
-from Theme_style import UI_COLORS, NEON, LEVEL_COLORS, hex_to_rgb, draw_panel
+from Theme_style import UI_COLORS, ACCENT_COLORS, LEVEL_COLORS, hex_to_rgb, draw_panel
 
 
 # ============ LAYOUT ============
@@ -54,7 +54,7 @@ def get_font(size):
 # ============ SHARED HELPERS ============
 
 def draw_text(screen, text, size, color, x, y):
-    """Draw text with its top-left corner at (x, y)."""
+    """Draw text with its top left corner at (x, y)."""
     text_image = get_font(size).render(str(text), True, hex_to_rgb(color))
     screen.blit(text_image, (x, y))
 
@@ -126,7 +126,7 @@ def draw_board_area(screen, grid=None):
     """
     draw_grid_lines(screen)
     draw_panel(screen, (0, 0, BOARD_WIDTH, BOARD_HEIGHT),
-                border_color=NEON["cyan"], border_width=1)
+                border_color=ACCENT_COLORS["board"], border_width=1)
 
     if grid is not None:
         for row in range(ROWS):
@@ -138,7 +138,7 @@ def draw_board_area(screen, grid=None):
 def draw_block(screen, shape, x, y, color=None):
     """Draw the currently falling block, one cell at a time."""
     if color is None:
-        color = NEON["purple"]
+        color = ACCENT_COLORS["blocks"]
 
     for row in range(len(shape)):
         for column in range(len(shape[0])):
@@ -151,11 +151,11 @@ def draw_block(screen, shape, x, y, color=None):
 def draw_preview(screen, shape, color=None):
     """Panel that shows the next block."""
     if color is None:
-        color = NEON["purple"]
+        color = ACCENT_COLORS["blocks"]
 
     draw_panel(screen, (PANEL_X, PREVIEW_Y, PANEL_WIDTH, PREVIEW_HEIGHT),
-                fill_color=UI_COLORS["card"], border_color=NEON["purple"])
-    draw_text(screen, "NEXT", 24, NEON["purple"], PANEL_X + 12, PREVIEW_Y + 10)
+                fill_color=UI_COLORS["card"], border_color=ACCENT_COLORS["preview"])
+    draw_text(screen, "NEXT", 24, ACCENT_COLORS["preview"], PANEL_X + 12, PREVIEW_Y + 10)
 
     # The preview blocks are a bit smaller than the board blocks
     preview_cell = CELL_SIZE - 10
@@ -188,23 +188,23 @@ def draw_info_panel(screen, y, height, title, value, color, value_size):
 
 
 def draw_score(screen, score):
-    """Score panel, green."""
-    draw_info_panel(screen, SCORE_Y, SCORE_HEIGHT, "SCORE", score, NEON["green"], 38)
+    """Score panel."""
+    draw_info_panel(screen, SCORE_Y, SCORE_HEIGHT, "SCORE", score, ACCENT_COLORS["score"], 38)
 
 
 def draw_level(screen, level):
-    """Level panel, cyan."""
-    draw_info_panel(screen, LEVEL_Y, LEVEL_HEIGHT, "LEVEL", level, NEON["cyan"], 34)
+    """Level panel."""
+    draw_info_panel(screen, LEVEL_Y, LEVEL_HEIGHT, "LEVEL", level, ACCENT_COLORS["level"], 34)
 
 
 def draw_leaderboard(screen, scores):
     """
-    Leaderboard panel, yellow.
+    Leaderboard panel.
     scores = list of [name, points, level]
     """
     draw_panel(screen, (PANEL_X, LEADER_Y, PANEL_WIDTH, LEADER_HEIGHT),
-                fill_color=UI_COLORS["card"], border_color=NEON["yellow"])
-    draw_text(screen, "LEADERBOARD", 26, NEON["yellow"], PANEL_X + 14, LEADER_Y + 14)
+                fill_color=UI_COLORS["card"], border_color=ACCENT_COLORS["leaderboard"])
+    draw_text(screen, "LEADERBOARD", 26, ACCENT_COLORS["leaderboard"], PANEL_X + 14, LEADER_Y + 14)
 
     # One score per line: "1. NAME  1200  L4"
     place = 1
@@ -218,31 +218,26 @@ def draw_leaderboard(screen, scores):
 # ============ POPUPS (game over, menus, name entry) ============
 
 def draw_game_over(screen, score, screen_width, screen_height):
-    """Game over popup, pink."""
-    panel_y = draw_popup(screen, screen_width, screen_height, 420, 220, NEON["pink"])
+    """Game over popup."""
+    panel_y = draw_popup(screen, screen_width, screen_height, 420, 220, ACCENT_COLORS["game_over"])
     center_x = screen_width // 2
 
-    draw_text_centered(screen, "GAME OVER", 56, NEON["pink"], center_x, panel_y + 40)
+    draw_text_centered(screen, "GAME OVER", 56, ACCENT_COLORS["game_over"], center_x, panel_y + 40)
     draw_text_centered(screen, "Score: " + str(score), 36, UI_COLORS["foreground"], center_x, panel_y + 110)
     draw_text_centered(screen, "Press R to restart", 24, UI_COLORS["muted-foreground"], center_x, panel_y + 160)
 
 
 def draw_menu(screen, title, options, selected, width, height):
-    """
-    Menu popup, purple.
-    options  = list of texts
-    selected = index of the chosen option (gets highlighted)
-    """
     panel_height = 130 + len(options) * 60
-    panel_y = draw_popup(screen, width, height, 460, panel_height, NEON["purple"])
+    panel_y = draw_popup(screen, width, height, 460, panel_height, ACCENT_COLORS["menu"])
     center_x = width // 2
 
-    draw_text_centered(screen, title, 52, NEON["purple"], center_x, panel_y + 30)
+    draw_text_centered(screen, title, 52, ACCENT_COLORS["menu"], center_x, panel_y + 30)
 
     # Draw each option. The selected one gets a different color and arrows.
     for i in range(len(options)):
         if i == selected:
-            color = NEON["green"]
+            color = ACCENT_COLORS["menu_selected"]
             text = "> " + options[i] + " <"
         else:
             color = UI_COLORS["muted-foreground"]
@@ -251,11 +246,11 @@ def draw_menu(screen, title, options, selected, width, height):
 
 
 def draw_name_entry(screen, player_number, name, width, height):
-    """Popup where a player types their name (multiplayer), cyan."""
-    panel_y = draw_popup(screen, width, height, 460, 200, NEON["cyan"])
+    """Popup where a player types their name (multiplayer)."""
+    panel_y = draw_popup(screen, width, height, 460, 200, ACCENT_COLORS["name_entry"])
     center_x = width // 2
 
-    draw_text_centered(screen, "Player " + str(player_number) + " - enter name", 40, NEON["cyan"], center_x, panel_y + 30)
+    draw_text_centered(screen, "Player " + str(player_number) + " - enter name", 40, ACCENT_COLORS["name_entry"], center_x, panel_y + 30)
     # The typed name with an underscore behind it, so it looks like a cursor
     draw_text_centered(screen, name + "_", 46, UI_COLORS["foreground"], center_x, panel_y + 90)
     draw_text_centered(screen, "Press Enter to confirm", 24, UI_COLORS["muted-foreground"], center_x, panel_y + 150)
